@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 const CookieKey = "kagiana_oauth_state"
@@ -32,24 +30,38 @@ func (g *AuthGitHub) Login(w http.ResponseWriter, r *http.Request) {
 func (g *AuthGitHub) Callback(w http.ResponseWriter, r *http.Request) {
 	oAuthState, err := r.Cookie(CookieKey)
 	if err != nil {
-		logrus.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		RenderError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	if r.FormValue("state") != oAuthState.Value {
-		logrus.Error(err)
-		w.WriteHeader(http.StatusUnauthorized)
+		RenderError(w, http.StatusUnauthorized, err)
 		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		fmt.Println("errorだよ")
 	}
 
 	token, err := g.getAccessToken(r.FormValue("code"))
 	if err != nil {
-		logrus.Error(err)
-		w.WriteHeader(http.StatusUnauthorized)
+		RenderError(w, http.StatusUnauthorized, err)
 		return
 	}
-	fmt.Println(token)
+
+	vlt, err := NewVault(g.config, map[string]string{"github_token": token})
+	if err != nil {
+		RenderError(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	certBundles, err := vlt.CreateCert()
+	if err != nil {
+		RenderError(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	RenderSuccess(w, certBundles, vlt.Token())
 }
 
 func (g *AuthGitHub) generateStateOAuthCookie(w http.ResponseWriter) string {

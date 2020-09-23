@@ -27,10 +27,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
-	"github.com/facebookgo/pidfile"
+	"github.com/go-playground/validator"
 	"github.com/pyama86/kagiana/kagiana"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -44,20 +45,16 @@ var serverCmd = &cobra.Command{
 	Long:  `It is starting kagiana servercommand.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		config := &kagiana.Config{}
-		viper.SetEnvPrefix("Kagiana")
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 		viper.AutomaticEnv()
 		if err := viper.Unmarshal(&config); err != nil {
 			logrus.Fatal(err)
 		}
 
-		if config.LogFile != "" {
-			f, err := os.OpenFile(config.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-			if err != nil {
-				logrus.Fatal("error opening file :" + err.Error())
-			}
-			logrus.SetOutput(f)
+		validate := validator.New()
+		if err := validate.Struct(config); err != nil {
+			logrus.Fatal(err)
 		}
-
 		switch config.LogLevel {
 		case "debug":
 			logrus.SetLevel(logrus.DebugLevel)
@@ -76,17 +73,6 @@ var serverCmd = &cobra.Command{
 }
 
 func runServer(config *kagiana.Config) error {
-	pidfile.SetPidfilePath(config.PIDFile)
-	if err := pidfile.Write(); err != nil {
-		return err
-	}
-
-	defer func() {
-		if err := os.Remove(pidfile.GetPidfilePath()); err != nil {
-			logrus.Errorf("Error removing %s: %s", pidfile.GetPidfilePath(), err)
-		}
-	}()
-
 	var provider kagiana.OAuthProvider
 	switch config.OAuthProvider {
 	case "github":
@@ -101,6 +87,7 @@ func runServer(config *kagiana.Config) error {
 
 	server := http.Server{
 		Handler: mux,
+		Addr:    config.Listener,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -112,13 +99,13 @@ func runServer(config *kagiana.Config) error {
 		<-quit
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		logrus.Info("starting shutdown stnsd")
+		logrus.Info("starting shutdown kagiana")
 		if err := server.Shutdown(ctx); err != nil {
 			logrus.Errorf("shutting down the server: %s", err)
 		}
 	}()
 	logrus.Info("starting kagiana")
-	if err := http.ListenAndServe(config.Listener, mux); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		if err.Error() != "http: Server closed" {
 			logrus.Error(err)
 		} else {
@@ -131,17 +118,14 @@ func runServer(config *kagiana.Config) error {
 }
 
 func init() {
-	serverCmd.PersistentFlags().StringP("pid-file", "p", "/var/run/kagiana.pid", "pid file")
-	viper.BindPFlag("PIDFile", serverCmd.PersistentFlags().Lookup("pid-file"))
-
-	serverCmd.PersistentFlags().StringP("log-file", "l", "/var/log/kagiana.log", "log file")
-	viper.BindPFlag("LogFile", serverCmd.PersistentFlags().Lookup("log-file"))
-
 	serverCmd.PersistentFlags().String("log-level", "info", "log level(debug,info,warn,error)")
 	viper.BindPFlag("LogLevel", serverCmd.PersistentFlags().Lookup("log-level"))
 
 	serverCmd.PersistentFlags().String("oauth-provider", "github", "use oauth provier")
 	viper.BindPFlag("OAuthProvider", serverCmd.PersistentFlags().Lookup("oauth-provider"))
+
+	serverCmd.PersistentFlags().String("redirect-url", "http://localhost:18080/callback", "oauth redirect url")
+	viper.BindPFlag("OAuth.RedirectURL", serverCmd.PersistentFlags().Lookup("redirect-url"))
 
 	serverCmd.PersistentFlags().String("client-id", "", "oauth provider client id")
 	viper.BindPFlag("OAuth.ClientID", serverCmd.PersistentFlags().Lookup("client-id"))
@@ -149,10 +133,17 @@ func init() {
 	serverCmd.PersistentFlags().String("client-secret", "", "oauth provider client secret")
 	viper.BindPFlag("OAuth.ClientSecret", serverCmd.PersistentFlags().Lookup("client-secret"))
 
-	serverCmd.PersistentFlags().String("github-auth-url", "https://github.com/login/oauth/authorize", "github auth url")
-	viper.BindPFlag("OAuth.Endpoint.AuthURL", serverCmd.PersistentFlags().Lookup("github-auth-url"))
+	serverCmd.PersistentFlags().String("oauth-auth-url", "https://github.com/login/oauth/authorize", "oauth auth url")
+	viper.BindPFlag("OAuth.Endpoint.AuthURL", serverCmd.PersistentFlags().Lookup("oauth-auth-url"))
 
-	serverCmd.PersistentFlags().String("github-token-url", "https://github.com/login/oauth/access_token", "github token url")
-	viper.BindPFlag("OAuth.Endpoint.AuthURL", serverCmd.PersistentFlags().Lookup("github-token-url"))
+	serverCmd.PersistentFlags().String("oauth-token-url", "https://github.com/login/oauth/access_token", "oauth token url")
+	viper.BindPFlag("OAuth.Endpoint.TokenURL", serverCmd.PersistentFlags().Lookup("oauth-token-url"))
+
+	serverCmd.PersistentFlags().StringSlice("oauth-scopes", []string{"user"}, "oauth scopes")
+	viper.BindPFlag("OAuth.Scopes", serverCmd.PersistentFlags().Lookup("oauth-scopes"))
+
+	serverCmd.PersistentFlags().String("listener", "localhost:18080", "listen host")
+	viper.BindPFlag("Listener", serverCmd.PersistentFlags().Lookup("listener"))
+
 	rootCmd.AddCommand(serverCmd)
 }

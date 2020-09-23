@@ -1,20 +1,23 @@
 package kagiana
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/vault/api"
-	credGitHub "github.com/hashicorp/vault/builtin/credential/github"
+
+	"github.com/hashicorp/vault/sdk/helper/certutil"
 )
 
 const VaultTimeout = 30
 
 type Vault struct {
 	client *api.Client
+	config *Config
+	token  string
 }
 
 func NewVault(config *Config, m map[string]string) (*Vault, error) {
@@ -30,29 +33,51 @@ func NewVault(config *Config, m map[string]string) (*Vault, error) {
 	if err != nil {
 		return nil, err
 	}
-	var handler vaultCommandLoginHandler
+	var secret *api.Secret
 	switch config.OAuthProvider {
 	case "github":
-		handler = credGitHub.CLIHandler{}
+		s, err := client.Logical().Write("auth/github/login", map[string]interface{}{
+			"token": strings.TrimSpace(m["github_token"]),
+		})
+		if err != nil {
+			return nil, err
+		}
+		if s == nil {
+			return nil, fmt.Errorf("empty response from credential provider")
+		}
+		secret = s
+
 	default:
 		return nil, fmt.Errorf("unknown provider %s", config.OAuthProvider)
-	}
-
-	secret, err := handler.Auth(client, m)
-	if err != nil {
-		return nil, fmt.Error("Error authenticating: %s", err)
-	}
-
-	secret, _, err := c.extractToken(client, secret, false)
-	if err != nil {
-		return nil, fmt.Errorf("Error extracting token: %s", err)
-	}
-	if secret == nil {
-		return nil, errors.New("Vault returned an empty secret")
 	}
 
 	client.SetToken(secret.Auth.ClientToken)
 	return &Vault{
 		client: client,
+		config: config,
 	}, nil
+}
+
+func (v *Vault) Token() string {
+	return v.client.Token()
+}
+func (v *Vault) CreateCert() (map[string]*certutil.CertBundle, error) {
+	cbs := map[string]*certutil.CertBundle{}
+	for _, c := range v.config.Certs {
+		ret, err := v.client.Logical().Write(c.Path, c.ToVaultOptions())
+		if err != nil {
+			return nil, err
+		}
+		cert, err := certutil.ParsePKIMap(ret.Data)
+		if err != nil {
+			return nil, err
+		}
+		b, err := cert.ToCertBundle()
+		if err != nil {
+			return nil, err
+		}
+
+		cbs[c.Common_Name] = b
+	}
+	return cbs, nil
 }
