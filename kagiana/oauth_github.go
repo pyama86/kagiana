@@ -9,16 +9,16 @@ import (
 	"time"
 )
 
-const CookieKey = "kagiana_oauth_state"
-
 func NewGitHub(config *Config) *AuthGitHub {
 	return &AuthGitHub{
-		config: config,
+		config:  config,
+		getCert: getCert,
 	}
 }
 
 type AuthGitHub struct {
-	config *Config
+	config  *Config
+	getCert func(http.ResponseWriter, *http.Request, *Vault)
 }
 
 func (g *AuthGitHub) Login(w http.ResponseWriter, r *http.Request) {
@@ -34,13 +34,14 @@ func (g *AuthGitHub) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.FormValue("state") != oAuthState.Value {
+	if err := r.ParseForm(); err != nil {
 		RenderError(w, http.StatusUnauthorized, err)
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
-		fmt.Println("errorだよ")
+	if r.FormValue("state") != oAuthState.Value {
+		RenderError(w, http.StatusUnauthorized, err)
+		return
 	}
 
 	token, err := g.getAccessToken(r.FormValue("code"))
@@ -55,13 +56,7 @@ func (g *AuthGitHub) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	certBundles, err := vlt.CreateCert()
-	if err != nil {
-		RenderError(w, http.StatusUnauthorized, err)
-		return
-	}
-
-	RenderSuccess(w, certBundles, vlt.Token())
+	g.getCert(w, r, vlt)
 }
 
 func (g *AuthGitHub) generateStateOAuthCookie(w http.ResponseWriter) string {
