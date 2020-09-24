@@ -3,6 +3,6 @@ TEST ?= $(shell go list ./... | grep -v -e vendor)
 test:
 	go test -v $(TEST)
 
-build:
+docker:
 	docker build -t pyama86/kagiana:$(VERSION) .
 	docker push pyama86/kagiana:$(VERSION)
