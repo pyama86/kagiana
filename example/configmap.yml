@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kagiana-config
+data:
+  kagiana.toml: |-
+    listener = "0.0.0.0:18080"
+    [[certs]]
+    common_name = "vault.example.com"
+    path = "example.com/issue/example.com"
+    format = "pem"

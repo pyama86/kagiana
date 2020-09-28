@@ -1,0 +1,65 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kagiana
+spec:
+  selector:
+    matchLabels:
+      name: kagiana
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: kagiana
+    spec:
+      volumes:
+        - name: kagiana-config
+          configMap:
+            name: kagiana-config
+            items:
+              - key:  kagiana.toml
+                path: kagiana.toml
+      containers:
+        - name: app
+          image: pyama/kagiana:0.2.0
+          args: ["--config", "/etc/kagiana/kagiana.toml"]
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 18080
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            timeoutSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 18080
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            timeoutSeconds: 10
+          env:
+          - name: VAULT_ADDR
+            value: "https://vault.example.com:8200"
+          - name: OAUTH_REDIRECTURL
+            value: "https://kagiana.example.com/callback"
+          - name: OAUTH_ENDPOINT_AUTHURL
+            value: "https://example.com/login/oauth/authorize"
+          - name: OAUTH_ENDPOINT_TOKENURL
+            value: "https://example.com/login/oauth/access_token"
+          - name: OAUTH_CLIENTID
+            valueFrom:
+              secretKeyRef:
+                name: kagiana-secret
+                key: client_id
+          - name: OAUTH_CLIENTSECRET
+            valueFrom:
+              secretKeyRef:
+                name: kagiana-secret
+                key: client_secret
+          ports:
+          - containerPort: 18080
+          volumeMounts:
+            - name: kagiana-config
+              mountPath: /etc/kagiana
