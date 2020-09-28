@@ -68,7 +68,7 @@ var footer = `
         <div class="control">
           <div class="tags has-addons">
             <span class="tag is-dark">View on GitHub</span>
-            <span class="tag has-addons is-warning"><a href="https://pyama86/kagiana"><i class="fab fa-lg fa-github"></i></a></span>
+            <span class="tag has-addons is-warning"><a href="https://github.com/pyama86/kagiana"><i class="fab fa-lg fa-github"></i></a></span>
           </div>
         </div>
       </div>
