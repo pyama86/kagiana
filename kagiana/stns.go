@@ -22,6 +22,11 @@ func NewSTNS(config *Config, tokenType string) *STNS {
 	}
 }
 
+type STNSResponce struct {
+	Token string
+	Certs map[string]map[string]string
+}
+
 func (s *STNS) Call(w http.ResponseWriter, r *http.Request) {
 	stns, err := libstns.NewSTNS(s.config.STNSEndpoint, &s.config.STNSOptions)
 
@@ -56,16 +61,20 @@ func (s *STNS) Call(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ret := map[string]map[string]string{}
+	ret := STNSResponce{
+		Token: vlt.Token(),
+	}
 
+	certs := map[string]map[string]string{}
 	for name, cb := range cbs {
-		ret[name] = map[string]string{
+		certs[name] = map[string]string{
 			"ca":   strings.Join(cb.CAChain, "\\n"),
 			"cert": cb.Certificate,
 			"key":  cb.PrivateKey,
 		}
 	}
 
+	ret.Certs = certs
 	w.WriteHeader(http.StatusOK)
 
 	b, err := json.Marshal(&ret)

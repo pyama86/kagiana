@@ -30,6 +30,8 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/pyama86/kagiana/kagiana"
 )
 
 func Test_requestSTNS(t *testing.T) {
@@ -57,6 +59,7 @@ func Test_requestSTNS(t *testing.T) {
 				"test.example.com.ca",
 				"test.example.com.cert",
 				"test.example.com.key",
+				"token",
 			},
 			wantErr: false,
 		},
@@ -77,11 +80,14 @@ func Test_requestSTNS(t *testing.T) {
 				if r.URL.Path == "/auth/stns" {
 					w.WriteHeader(http.StatusOK)
 
-					ret := map[string]map[string]string{
-						"test.example.com": map[string]string{
-							"ca":   "ca value",
-							"cert": "cert value",
-							"key":  "key value",
+					ret := kagiana.STNSResponce{
+						Token: "test token",
+						Certs: map[string]map[string]string{
+							"test.example.com": map[string]string{
+								"ca":   "ca value",
+								"cert": "cert value",
+								"key":  "key value",
+							},
 						},
 					}
 

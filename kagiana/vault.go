@@ -77,7 +77,7 @@ func (v *Vault) CreateCert() (map[string]*certutil.CertBundle, error) {
 			return nil, err
 		}
 
-		cbs[c.Common_Name] = b
+		cbs[c.CommonName] = b
 	}
 	return cbs, nil
 }

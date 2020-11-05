@@ -13,22 +13,22 @@ type Config struct {
 	OAuthProvider string
 	OAuth         oauth2.Config
 	Certs         []Cert          `validate:"required"`
-	STNSEndpoint  string          `toml:"stns_endpoint"`
-	STNSOptions   libstns.Options `toml:"stns_options"`
+	STNSEndpoint  string          `mapstructure:"stns_endpoint"`
+	STNSOptions   libstns.Options `mapstructure:"stns_options"`
 }
 
 type Cert struct {
-	Common_Name string ` validate:"required"`
-	Path        string `validate:"required"`
-	Format      string
-	TTL         string
-	AltNames    string
-	IPSans      string
+	CommonName string `mapstructure:"common_name" validate:"required"`
+	Path       string `validate:"required"`
+	Format     string
+	TTL        string
+	AltNames   string
+	IPSans     string
 }
 
 func (c Cert) ToVaultOptions() map[string]interface{} {
 	r := map[string]interface{}{}
-	r["common_name"] = c.Common_Name
+	r["common_name"] = c.CommonName
 	if c.Format != "" {
 		r["format"] = c.Format
 	}

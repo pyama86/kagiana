@@ -33,6 +33,7 @@ import (
 	"strings"
 
 	"github.com/STNS/libstns-go/libstns"
+	"github.com/pyama86/kagiana/kagiana"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -119,13 +120,25 @@ func requestSTNS(endpoint, authType, token, signature, userName, savePath string
 			return err
 		}
 
-		ret := map[string]map[string]string{}
+		ret := kagiana.STNSResponce{}
 		if err := json.Unmarshal(body, &ret); err != nil {
 			return err
 		}
 
 		usr, _ := user.Current()
-		for name, keys := range ret {
+
+		file, err := os.Create(strings.Replace(path.Join(savePath, "token"), "~", usr.HomeDir, 1))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		_, err = file.Write([]byte(ret.Token))
+		if err != nil {
+			return err
+		}
+
+		for name, keys := range ret.Certs {
 			for keyType, keyValue := range keys {
 				file, err := os.Create(strings.Replace(path.Join(savePath, fmt.Sprintf("%s.%s", name, keyType)), "~", usr.HomeDir, 1))
 				if err != nil {
