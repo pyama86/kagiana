@@ -42,6 +42,7 @@ func (s *STNS) Call(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logrus.Infof("login successfully %s", r.FormValue("user"))
 	vlt, err := NewVault(s.config, map[string]string{s.tokenType: r.FormValue("token")})
 	if err != nil {
 		logrus.Error(err)

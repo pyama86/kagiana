@@ -25,3 +25,10 @@ Global Flags:
       --config string   config file (default is $HOME/.kagiana)
 
 ```
+
+## Install
+### Homebrew
+```bash
+% brew tap pyama86/homebrew-kagiana
+% brew install kagiana
+```

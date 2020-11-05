@@ -25,4 +25,4 @@ release_patch:
 	git semv patch --bump
 
 release:
-	goreleaser --rm-dist
+	goreleaser --rm-dist --skip-validate 
