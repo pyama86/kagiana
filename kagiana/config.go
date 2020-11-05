@@ -1,6 +1,7 @@
 package kagiana
 
 import (
+	"github.com/STNS/libstns-go/libstns"
 	"golang.org/x/oauth2"
 )
 
@@ -11,7 +12,9 @@ type Config struct {
 	Listener      string
 	OAuthProvider string
 	OAuth         oauth2.Config
-	Certs         []Cert `validate:"required"`
+	Certs         []Cert          `validate:"required"`
+	STNSEndpoint  string          `toml:"stns_endpoint"`
+	STNSOptions   libstns.Options `toml:"stns_options"`
 }
 
 type Cert struct {
