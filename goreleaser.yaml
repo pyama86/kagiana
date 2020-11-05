@@ -1,0 +1,22 @@
+brew:
+  github:
+    owner: pyama86
+    name: homebrew-kagiana
+  commit_author:
+    name: pyama86
+    email: www.kazu.com@gmail.com
+  description: "Kagiana for Vault"
+  homepage: "https://github.com/pyama86/kagiana"
+  install: |
+    bin.install 'kagiana'
+  test: |
+    system "#{bin}/kagiana"
+builds:
+- goos:
+  - linux
+  - darwin
+  goarch:
+  - amd64
+  main: .
+  binary: kagiana
+
