@@ -74,6 +74,7 @@ var serverCmd = &cobra.Command{
 
 func runServer(config *kagiana.Config) error {
 	var provider kagiana.OAuthProvider
+	tokenType := "github_token"
 	switch config.OAuthProvider {
 	case "github":
 		provider = kagiana.NewGitHub(config)
@@ -81,8 +82,10 @@ func runServer(config *kagiana.Config) error {
 		return fmt.Errorf("unknown provider %s", config.OAuthProvider)
 	}
 
+	stns := kagiana.NewSTNS(config, tokenType)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", provider.Login)
+	mux.HandleFunc("/auth/stns", stns.Call)
 	mux.HandleFunc("/callback", provider.Callback)
 
 	server := http.Server{
