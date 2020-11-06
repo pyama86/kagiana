@@ -41,22 +41,24 @@ func (s *STNS) Call(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := stns.VerifyWithUser(r.FormValue("user"), []byte(r.FormValue("token")), []byte(r.FormValue("signature"))); err != nil {
-		logrus.Error(err)
+	userName := r.FormValue("user")
+	userToken := r.FormValue("token")
+	if err := stns.VerifyWithUser(userName, []byte(userToken), []byte(r.FormValue("signature"))); err != nil {
+		logrus.Errorf("%s verify failed: %s", userName, err.Error())
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	logrus.Infof("login successfully %s", r.FormValue("user"))
-	vlt, err := NewVault(s.config, map[string]string{s.tokenType: r.FormValue("token")})
+	logrus.Infof("login successfully %s", userName)
+	vlt, err := NewVault(s.config, map[string]string{s.tokenType: userToken})
 	if err != nil {
-		logrus.Error(err)
+		logrus.Errorf("%s vault login failed: %s", userName, err.Error())
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	cbs, err := vlt.CreateCert()
 	if err != nil {
-		logrus.Error(err)
+		logrus.Errorf("%s create cert failed: %s", userName, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -79,7 +81,7 @@ func (s *STNS) Call(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(&ret)
 	if err != nil {
-		logrus.Error(err)
+		logrus.Errorf("%s json marshal failed: %s", userName, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
