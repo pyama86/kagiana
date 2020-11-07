@@ -87,7 +87,7 @@ func requestSTNS(endpoint, authType, token, signature, userName, savePath string
 		return err
 	}
 	u.Path = path.Join(u.Path, fmt.Sprintf("auth/%s/challenge", authType))
-	u.RawQuery = fmt.Sprintf("name=%s", userName)
+	u.RawQuery = fmt.Sprintf("user=%s", userName)
 	resp, err := http.Get(u.String())
 	if err != nil {
 		return err
