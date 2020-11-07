@@ -85,6 +85,8 @@ func runServer(config *kagiana.Config) error {
 	stns := kagiana.NewSTNS(config, tokenType)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", provider.Login)
+	mux.HandleFunc("/auth/stns/challenge", stns.Challenge)
+	mux.HandleFunc("/auth/stns/verify", stns.Verify)
 	mux.HandleFunc("/auth/stns", stns.Call)
 	mux.HandleFunc("/callback", provider.Callback)
 

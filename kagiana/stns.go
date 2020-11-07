@@ -27,6 +27,29 @@ type STNSResponce struct {
 	Certs map[string]map[string]string
 }
 
+func (s *STNS) getCertsAndToken(userName, userToken string) (map[string]map[string]string, string, error) {
+	vlt, err := NewVault(s.config, map[string]string{s.tokenType: userToken})
+	if err != nil {
+		return nil, "", fmt.Errorf("%s vault login failed: %s", userName, err.Error())
+	}
+
+	cbs, err := vlt.CreateCert()
+	if err != nil {
+		return nil, "", fmt.Errorf("%s create cert failed: %s", userName, err.Error())
+	}
+
+	certs := map[string]map[string]string{}
+	for name, cb := range cbs {
+		certs[name] = map[string]string{
+			"ca":   strings.Join(cb.CAChain, "\\n"),
+			"cert": cb.Certificate,
+			"key":  cb.PrivateKey,
+		}
+	}
+
+	return certs, vlt.Token(), nil
+
+}
 func (s *STNS) Call(w http.ResponseWriter, r *http.Request) {
 	stns, err := libstns.NewSTNS(s.config.STNSEndpoint, &s.config.STNSOptions)
 
@@ -50,30 +73,80 @@ func (s *STNS) Call(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logrus.Infof("login successfully %s", userName)
-	vlt, err := NewVault(s.config, map[string]string{s.tokenType: userToken})
+	s.ResponceCerts(w, r, userName, userToken)
+}
+
+func (s *STNS) Challenge(w http.ResponseWriter, r *http.Request) {
+	stns, err := libstns.NewSTNS(s.config.STNSEndpoint, &s.config.STNSOptions)
+
 	if err != nil {
-		logrus.Errorf("%s vault login failed: %s", userName, err.Error())
+		logrus.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		logrus.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	userName := r.FormValue("user")
+	code, err := stns.CreateUserChallengeCode(userName)
+	if err != nil {
+		logrus.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	fmt.Fprintf(w, string(code))
+}
+
+func (s *STNS) Verify(w http.ResponseWriter, r *http.Request) {
+	stns, err := libstns.NewSTNS(s.config.STNSEndpoint, &s.config.STNSOptions)
+
+	if err != nil {
+		logrus.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		logrus.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	userName := r.FormValue("user")
+	userToken := r.FormValue("token")
+	challengeCode := r.FormValue("code")
+	if err := stns.VerifyWithUser(userName, []byte(challengeCode), []byte(r.FormValue("signature"))); err != nil {
+		logrus.Errorf("%s verify failed: %s", userName, err.Error())
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	cbs, err := vlt.CreateCert()
+
+	code, err := stns.PopUserChallengeCode(userName)
 	if err != nil {
-		logrus.Errorf("%s create cert failed: %s", userName, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	ret := STNSResponce{
-		Token: vlt.Token(),
+	if string(code) == r.FormValue("code") {
+		s.ResponceCerts(w, r, userName, userToken)
+		return
 	}
 
-	certs := map[string]map[string]string{}
-	for name, cb := range cbs {
-		certs[name] = map[string]string{
-			"ca":   strings.Join(cb.CAChain, "\\n"),
-			"cert": cb.Certificate,
-			"key":  cb.PrivateKey,
-		}
+	w.WriteHeader(http.StatusInternalServerError)
+}
+
+func (s *STNS) ResponceCerts(w http.ResponseWriter, r *http.Request, userName, userToken string) {
+	certs, token, err := s.getCertsAndToken(userName, userToken)
+	if err != nil {
+		logrus.Errorf("%s vault auth failed: %s", userName, err.Error())
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	ret := STNSResponce{
+		Token: token,
 	}
 
 	ret.Certs = certs
@@ -86,7 +159,4 @@ func (s *STNS) Call(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprintf(w, string(b))
-
-	return
-
 }
