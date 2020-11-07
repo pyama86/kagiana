@@ -41,6 +41,7 @@ func Test_requestSTNS(t *testing.T) {
 		token     string
 		signature string
 		userName  string
+		code      string
 	}
 	tests := []struct {
 		name    string
@@ -55,6 +56,7 @@ func Test_requestSTNS(t *testing.T) {
 				token:     "test toke",
 				signature: "test sig",
 				userName:  "test-user",
+				code:      "test-code",
 			},
 			want: []string{
 				"test.example.com.ca",
@@ -71,8 +73,8 @@ func Test_requestSTNS(t *testing.T) {
 				token:     "test toke",
 				signature: "test sig",
 				userName:  "test-user",
-			},
-			wantErr: true,
+				code:      "test-code",
+			}, wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -88,7 +90,7 @@ func Test_requestSTNS(t *testing.T) {
 						return
 					}
 
-					if r.FormValue("code") != tt.name {
+					if r.FormValue("code") != tt.args.code {
 						t.Error(errors.New("unmatch code"))
 						w.WriteHeader(http.StatusBadRequest)
 						return
@@ -125,8 +127,8 @@ func Test_requestSTNS(t *testing.T) {
 			}
 
 			defer os.RemoveAll(dir)
-			if err := requestSTNS(ts.URL, tt.args.authType, tt.args.token, tt.args.signature, tt.args.userName, dir); (err != nil) != tt.wantErr {
-				t.Errorf("requestSTNS() error = %v, wantErr %v", err, tt.wantErr)
+			if err := verify(ts.URL, tt.args.authType, tt.args.token, tt.args.signature, tt.args.userName, dir, tt.args.code); (err != nil) != tt.wantErr {
+				t.Errorf("verify() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			files, err := ioutil.ReadDir(dir)
 			if err != nil {
@@ -138,7 +140,7 @@ func Test_requestSTNS(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(paths, tt.want) {
-				t.Errorf("requestSTNS() = %v, want %v", paths, tt.want)
+				t.Errorf("verify() = %v, want %v", paths, tt.want)
 			}
 		})
 	}

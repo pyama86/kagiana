@@ -69,46 +69,51 @@ func runClient() error {
 		return err
 	}
 
-	signature, err := stns.Sign([]byte(token))
+	code, err := getChallengeCode(endpoint, authType)
 	if err != nil {
 		return err
 	}
 
-	if err := requestSTNS(endpoint, authType, token, string(signature), userName, savePath); err != nil {
+	signature, err := stns.Sign([]byte(code))
+	if err != nil {
+		return err
+	}
+
+	if err := verify(endpoint, authType, token, string(signature), userName, savePath, string(code)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func requestSTNS(endpoint, authType, token, signature, userName, savePath string) error {
+func getChallengeCode(endpoint, authType string) ([]byte, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
 	u.Path = path.Join(u.Path, fmt.Sprintf("auth/%s/challenge", authType))
 	u.RawQuery = fmt.Sprintf("user=%s", userName)
 	resp, err := http.Get(u.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s can't get challenge code", userName)
+		return nil, fmt.Errorf("%s can't get challenge code", userName)
 	}
 
 	defer resp.Body.Close()
-	code, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
+	return ioutil.ReadAll(resp.Body)
+}
 
+func verify(endpoint, authType, token, signature, userName, savePath, code string) error {
 	values := url.Values{}
-	values.Set("code", string(code))
+	values.Set("code", code)
 	values.Set("token", token)
 	values.Add("signature", signature)
 	values.Add("user", userName)
 
-	u, err = url.Parse(endpoint)
+	u, err := url.Parse(endpoint)
 	if err != nil {
 		return err
 	}
@@ -128,7 +133,7 @@ func requestSTNS(endpoint, authType, token, signature, userName, savePath string
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}
-	resp, err = client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
