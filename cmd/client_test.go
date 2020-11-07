@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -53,7 +54,7 @@ func Test_requestSTNS(t *testing.T) {
 				authType:  "stns",
 				token:     "test toke",
 				signature: "test sig",
-				userName:  "test user",
+				userName:  "test-user",
 			},
 			want: []string{
 				"test.example.com.ca",
@@ -69,7 +70,7 @@ func Test_requestSTNS(t *testing.T) {
 				authType:  "notfound",
 				token:     "test toke",
 				signature: "test sig",
-				userName:  "test user",
+				userName:  "test-user",
 			},
 			wantErr: true,
 		},
@@ -77,7 +78,22 @@ func Test_requestSTNS(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/auth/stns" {
+				if r.URL.Path == "/auth/stns/challenge" {
+					w.WriteHeader(http.StatusOK)
+					fmt.Fprintf(w, tt.name)
+				} else if r.URL.Path == "/auth/stns/verify" {
+					if err := r.ParseForm(); err != nil {
+						t.Error(err)
+						w.WriteHeader(http.StatusBadRequest)
+						return
+					}
+
+					if r.FormValue("code") != tt.name {
+						t.Error(errors.New("unmatch code"))
+						w.WriteHeader(http.StatusBadRequest)
+						return
+					}
+
 					w.WriteHeader(http.StatusOK)
 
 					ret := kagiana.STNSResponce{
