@@ -132,16 +132,17 @@ func (s *STNS) Verify(w http.ResponseWriter, r *http.Request) {
 
 	code, err := stns.PopUserChallengeCode(userName)
 	if err != nil {
-		logrus.Warnf("%s missmatch challenge code", userName)
-
 		w.WriteHeader(http.StatusInternalServerError)
+		logrus.Warnf("%s can't pop challenge code", userName)
 		return
 	}
 
 	if string(code) == r.FormValue("code") {
 		s.ResponceCerts(w, r, userName, userToken)
+		logrus.Infof("%s verify success", userName)
 		return
 	}
+	logrus.Warnf("%s missmatch challenge code", userName)
 
 	w.WriteHeader(http.StatusInternalServerError)
 }
