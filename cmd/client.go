@@ -153,6 +153,11 @@ func verify(endpoint, authType, token, signature, userName, savePath, code strin
 
 		usr, _ := user.Current()
 
+		err = os.MkdirAll(strings.Replace(savePath, "~", usr.HomeDir, 1), 0755)
+		if err != nil {
+			return err
+		}
+
 		file, err := os.Create(strings.Replace(path.Join(savePath, "token"), "~", usr.HomeDir, 1))
 		if err != nil {
 			return err
