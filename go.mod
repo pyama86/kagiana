@@ -16,4 +16,5 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 )
