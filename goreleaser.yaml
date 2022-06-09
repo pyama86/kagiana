@@ -1,5 +1,5 @@
-brew:
-  github:
+brews:
+- tap:
     owner: pyama86
     name: homebrew-kagiana
   commit_author:
