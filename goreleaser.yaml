@@ -12,9 +12,17 @@ brews:
   test: |
     system "#{bin}/kagiana"
 builds:
-- goos:
-  - linux
+- id: macos
+  goos:
   - darwin
+  goarch:
+  - amd64
+  - arm64
+  main: .
+  binary: kagiana
+- id: linux
+  goos:
+  - linux
   goarch:
   - amd64
   main: .
