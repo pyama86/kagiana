@@ -4,7 +4,7 @@ test:
 	go test -v $(TEST)
 
 docker:
-	docker build -t pyama/kagiana:$(VERSION) .
+	docker build --platform linux/amd64 -t pyama/kagiana:$(VERSION) .
 	docker push pyama/kagiana:$(VERSION)
 	docker tag pyama/kagiana:$(VERSION) pyama/kagiana:latest
 	docker push pyama/kagiana:latest
