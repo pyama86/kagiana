@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/vault/sdk v0.6.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sirupsen/logrus v1.7.0
-	github.com/spf13/cobra v1.6.0
+	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 )
