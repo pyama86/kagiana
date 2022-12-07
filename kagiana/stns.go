@@ -95,12 +95,14 @@ func (s *STNS) Challenge(w http.ResponseWriter, r *http.Request) {
 	if userName == "" {
 		logrus.Error("should set userName")
 		w.WriteHeader(http.StatusBadRequest)
+		return
 
 	}
 	code, err := stns.CreateUserChallengeCode(userName)
 	if err != nil {
 		logrus.Error(err)
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	logrus.Infof("%s get challenge code", userName)
