@@ -6,7 +6,7 @@ require (
 	github.com/STNS/libstns-go v0.4.1
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/hashicorp/vault/api v1.8.2
-	github.com/hashicorp/vault/sdk v0.6.1
+	github.com/hashicorp/vault/sdk v0.6.2
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
