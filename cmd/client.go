@@ -59,6 +59,11 @@ var token string
 var savePath string
 
 func runClient() error {
+
+	if token == "" {
+		token = viper.GetString("token")
+	}
+
 	opt := &libstns.Options{
 		PrivatekeyPath:     keyPath,
 		PrivatekeyPassword: keyPass,
@@ -197,6 +202,9 @@ func verify(endpoint, authType, token, signature, userName, savePath, code strin
 
 func init() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.SetEnvPrefix("kagiana")
+	viper.BindEnv("token")
+
 	clientCmd.PersistentFlags().StringVarP(&endpoint, "endpoint", "e", "", "Kagiana Endpoint")
 	clientCmd.PersistentFlags().StringVarP(&authType, "auth-type", "a", "stns", "Authentication type")
 	clientCmd.PersistentFlags().StringVarP(&userName, "user", "u", "", "Authentication User")
@@ -208,7 +216,6 @@ func init() {
 
 	clientCmd.MarkPersistentFlagRequired("endpoint")
 	clientCmd.MarkPersistentFlagRequired("user")
-	clientCmd.MarkPersistentFlagRequired("token")
 
 	rootCmd.AddCommand(clientCmd)
 }
