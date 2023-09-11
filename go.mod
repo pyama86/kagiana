@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/STNS/libstns-go v0.4.1
 	github.com/go-playground/validator v9.31.0+incompatible
-	github.com/hashicorp/vault/api v1.9.2
+	github.com/hashicorp/vault/api v1.10.0
 	github.com/hashicorp/vault/sdk v0.9.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sirupsen/logrus v1.9.3
