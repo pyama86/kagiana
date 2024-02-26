@@ -15,7 +15,7 @@ type Config struct {
 	Certs         []Cert          `validate:"required"`
 	STNSEndpoint  string          `mapstructure:"stns_endpoint"`
 	STNSOptions   libstns.Options `mapstructure:"stns_options"`
-	VaultAuthPath string
+	VaultAuthPath string          `mapstructure:"vault_auth_path"`
 }
 
 type Cert struct {
