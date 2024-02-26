@@ -20,3 +20,5 @@ jobs:
       id: go
     - name: Test
       run: go test -v .
+      env:
+        CGO_ENABLED: 0
