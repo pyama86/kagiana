@@ -36,7 +36,12 @@ func NewVault(config *Config, m map[string]string) (*Vault, error) {
 	var secret *api.Secret
 	switch config.OAuthProvider {
 	case "github":
-		s, err := client.Logical().Write("auth/github/login", map[string]interface{}{
+		authPath := "github"
+		if config.VaultAuthPath != "" {
+			authPath = config.VaultAuthPath
+
+		}
+		s, err := client.Logical().Write(fmt.Sprintf("auth/%s/login", authPath), map[string]interface{}{
 			"token": strings.TrimSpace(m["github_token"]),
 		})
 		if err != nil {

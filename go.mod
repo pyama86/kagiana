@@ -1,6 +1,6 @@
 module github.com/pyama86/kagiana
 
-go 1.18
+go 1.22
 
 require (
 	github.com/STNS/libstns-go v0.4.1
