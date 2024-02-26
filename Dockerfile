@@ -1,11 +1,7 @@
-FROM golang:1.15.2-alpine3.12 AS build-env
+FROM golang:latest AS build-env
 
 ENV GO111MODULE=on
-
-RUN apk --no-cache add git make build-base
-
 WORKDIR /go/src/kagiana
-
 COPY . .
 
 RUN mkdir -p /build
