@@ -1,0 +1,22 @@
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+name: Release
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: docker
+        run: make docker
+      - name: release
+        run: make release
