@@ -25,5 +25,8 @@ release_minor:
 release_patch:
 	git semv patch --bump
 
-release:
+release_deps:
+	which goreleaser > /dev/null || go install github.com/goreleaser/goreleaser@latest
+
+release: release_deps
 	goreleaser --rm-dist --skip-validate 
