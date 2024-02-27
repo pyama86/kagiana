@@ -124,31 +124,31 @@ func runServer(config *kagiana.Config) error {
 
 func init() {
 	serverCmd.PersistentFlags().String("log-level", "info", "log level(debug,info,warn,error)")
-	viper.BindPFlag("LogLevel", serverCmd.PersistentFlags().Lookup("log-level"))
+	viper.BindPFlag("log_level", serverCmd.PersistentFlags().Lookup("log-level"))
 
 	serverCmd.PersistentFlags().String("oauth-provider", "github", "use oauth provier")
-	viper.BindPFlag("OAuthProvider", serverCmd.PersistentFlags().Lookup("oauth-provider"))
+	viper.BindPFlag("oauth_provider", serverCmd.PersistentFlags().Lookup("oauth-provider"))
 
 	serverCmd.PersistentFlags().String("redirect-url", "http://localhost:18080/callback", "oauth redirect url")
-	viper.BindPFlag("OAuth.RedirectURL", serverCmd.PersistentFlags().Lookup("redirect-url"))
+	viper.BindPFlag("oauth.RedirectURL", serverCmd.PersistentFlags().Lookup("redirect-url"))
 
 	serverCmd.PersistentFlags().String("client-id", "", "oauth provider client id")
-	viper.BindPFlag("OAuth.ClientID", serverCmd.PersistentFlags().Lookup("client-id"))
+	viper.BindPFlag("oauth.ClientID", serverCmd.PersistentFlags().Lookup("client-id"))
 
 	serverCmd.PersistentFlags().String("client-secret", "", "oauth provider client secret")
-	viper.BindPFlag("OAuth.ClientSecret", serverCmd.PersistentFlags().Lookup("client-secret"))
+	viper.BindPFlag("oauth.ClientSecret", serverCmd.PersistentFlags().Lookup("client-secret"))
 
 	serverCmd.PersistentFlags().String("oauth-auth-url", "https://github.com/login/oauth/authorize", "oauth auth url")
-	viper.BindPFlag("OAuth.Endpoint.AuthURL", serverCmd.PersistentFlags().Lookup("oauth-auth-url"))
+	viper.BindPFlag("oauth.Endpoint.AuthURL", serverCmd.PersistentFlags().Lookup("oauth-auth-url"))
 
 	serverCmd.PersistentFlags().String("oauth-token-url", "https://github.com/login/oauth/access_token", "oauth token url")
-	viper.BindPFlag("OAuth.Endpoint.TokenURL", serverCmd.PersistentFlags().Lookup("oauth-token-url"))
+	viper.BindPFlag("oauth.Endpoint.TokenURL", serverCmd.PersistentFlags().Lookup("oauth-token-url"))
 
 	serverCmd.PersistentFlags().StringSlice("oauth-scopes", []string{"user"}, "oauth scopes")
-	viper.BindPFlag("OAuth.Scopes", serverCmd.PersistentFlags().Lookup("oauth-scopes"))
+	viper.BindPFlag("oauth.Scopes", serverCmd.PersistentFlags().Lookup("oauth-scopes"))
 
 	serverCmd.PersistentFlags().String("listener", "localhost:18080", "listen host")
-	viper.BindPFlag("Listener", serverCmd.PersistentFlags().Lookup("listener"))
+	viper.BindPFlag("", serverCmd.PersistentFlags().Lookup("listener"))
 
 	rootCmd.AddCommand(serverCmd)
 }
