@@ -6,13 +6,13 @@ import (
 )
 
 type Config struct {
-	PIDFile       string
-	LogFile       string
-	LogLevel      string
-	Listener      string
-	OAuthProvider string
-	OAuth         oauth2.Config
-	Certs         []Cert          `validate:"required"`
+	PIDFile       string          `mapstructure:"pid_file"`
+	LogFile       string          `mapstructure:"log_file"`
+	LogLevel      string          `mapstructure:"log_level"`
+	Listener      string          `mapstructure:"listener"`
+	OAuthProvider string          `mapstructure:"oauth_provider"`
+	OAuth         oauth2.Config   `mapstructure:"oauth"`
+	Certs         []Cert          `mapstructure:"certs" validate:"required"`
 	STNSEndpoint  string          `mapstructure:"stns_endpoint"`
 	STNSOptions   libstns.Options `mapstructure:"stns_options"`
 	VaultAuthPath string          `mapstructure:"vault_auth_path"`

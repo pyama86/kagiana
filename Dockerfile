@@ -1,6 +1,6 @@
 FROM golang:latest AS build-env
 
-ENV GO111MODULE=on
+ENV CGO_ENABLED=0
 WORKDIR /go/src/kagiana
 COPY . .
 
